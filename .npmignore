@@ -1,0 +1,81 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+build/
+*.tsbuildinfo
+
+# Cloudflare Wrangler
+.wrangler/
+wrangler.toml
+wrangler.jsonc.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Secrets
+.secrets/
+*.key
+*.pem
+*.p12
+
+# Cache
+.cache/
+.eslintcache
+.prettierrc
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Trash (recovery only)
+.trash/
+
+# D1 local database
+*.sqlite3
+*.sqlite3-journal
+
+# TypeScript
+*.tsbuildinfo
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# Migration scripts (not published)
+migrations/
+
+# Wrangler config (not published)
+wrangler.jsonc
