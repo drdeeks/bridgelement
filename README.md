@@ -13,7 +13,7 @@ provider-neutral policy enforcement, identity, persistent storage, and
 telemetry collection for RL, evaluation, analytics, replay, and downstream
 dataset generation. ChatGPT is one adapter; it is not the service identity.
 
-Spec: [`../../GPT-INTEGRATION-SPEC.md`](../../GPT-INTEGRATION-SPEC.md)
+Spec: [`../agent-character-kit/GPT-INTEGRATION-SPEC.md`](../agent-character-kit/GPT-INTEGRATION-SPEC.md)
 
 ## What this is
 

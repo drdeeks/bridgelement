@@ -9,5 +9,12 @@
       "database_name": "ack-universal",
       "database_id": "d2214790-b6e8-4f95-88d7-8169d0ccfaab"
     }
-  ]
+  ],
+  "alias": {
+    "@drdeeks/character-kit-core": "/home/drdeek/projects/Federation-Society/plugins/agent-character-kit/packages/core",
+    "@drdeeks/character-kit-protocol": "/home/drdeek/projects/Federation-Society/plugins/agent-character-kit/packages/protocol",
+    "@drdeeks/character-kit-config-schema": "/home/drdeek/projects/Federation-Society/plugins/agent-character-kit/packages/config-schema",
+    "@drdeeks/character-kit-mcp-contract": "/home/drdeek/projects/Federation-Society/plugins/agent-character-kit/packages/mcp-contract",
+    "@drdeeks/character-kit-events": "/home/drdeek/projects/Federation-Society/plugins/agent-character-kit/packages/events"
+  }
 }
