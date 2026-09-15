@@ -1,72 +1,89 @@
-import { HOSTED_TOOLS, DECISION_OUTPUT } from './vendor/mcp-contract/src/hosted-tools.js';
-import { evaluatePolicy } from './vendor/core/src/index.js'; // Assuming index.js is the entry point for core
+import { HOSTED_TOOLS } from "../vendor/mcp-contract/src/hosted-tools.js";
+import { MemoryStore } from "./storage/memory.js";
+import { D1Store } from "./storage/d1.js";
+import { handleMcpJsonRpc } from "./mcp.js";
+import { resolveIdentity, AuthError } from "./auth.js";
+import { buildRlEvent } from "./rl-events.js";
+
+const ACK_VERSION = "1.9.1";
+
+export function createStore(env) {
+  if (env.ACK_STORE) return env.ACK_STORE;
+  if (env.ACK_DB && typeof env.ACK_DB.prepare === "function") return new D1Store(env.ACK_DB, { provider: env.ACK_PROVIDER });
+  return new MemoryStore();
+}
+
+async function mcpHandler(request, env) {
+  const identity = resolveIdentity(request, env);
+  const store = createStore(env);
+  const body = await request.json();
+  const result = await handleMcpJsonRpc(body, { identity, store, env });
+  return new Response(JSON.stringify(result), {
+    headers: { "content-type": "application/json" },
+  });
+}
+
+async function eventsHandler(request, env) {
+  const identity = resolveIdentity(request, env);
+  const store = createStore(env);
+  const body = await request.json();
+  const events = body.events || [];
+  let accepted = 0;
+  for (const e of events) {
+    try {
+      const event = buildRlEvent(identity, e.eventType, {
+        sessionId: e.sessionId,
+        episodeId: e.episodeId,
+        taskId: e.taskId,
+        runId: e.runId,
+        source: e.source || "external",
+        component: e.component || "ingest",
+        payload: e.payload,
+      });
+      await store.appendEvent(identity, event);
+      accepted++;
+    } catch {
+    }
+  }
+  return new Response(JSON.stringify({ accepted }), { headers: { "content-type": "application/json" } });
+}
 
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
-    // 1. MCP Tool Discovery (The "Scan")
-    if (url.pathname === '/mcp/tools' || (url.pathname === '/mcp' && request.method === 'GET')) {
-      return new Response(JSON.stringify({
-        tools: HOSTED_TOOLS.map(tool => ({
-          name: tool.name,
-          description: tool.description,
-          inputSchema: tool.inputSchema
-        }))
-      }), {
-        headers: { 'Content-Type': 'application/json' }
+    if (url.pathname === "/health") {
+      return new Response(JSON.stringify({ ok: true, version: ACK_VERSION }), {
+        headers: { "content-type": "application/json" },
       });
     }
 
-    // 2. MCP Tool Execution (The "Enforcement")
-    if (url.pathname === '/mcp' && request.method === 'POST') {
-      try {
-        const { method, params } = await request.json();
-
-        if (method === 'tools/call') {
-          const { name, arguments: args } = params;
-          const tool = HOSTED_TOOLS.find(t => t.name === name);
-
-          if (!tool) {
-            return new Response(JSON.stringify({ error: `Tool ${name} not found` }), { status: 404 });
-          }
-
-          // Resolve User Identity from OAuth/Headers (Bridgelement Logic)
-          const userProfile = await env.DB.prepare(
-            "SELECT * FROM profiles WHERE user_id = ?"
-          ).bind(request.headers.get('X-ACK-User-ID')).first();
-
-          if (!userProfile) {
-            return new Response(JSON.stringify({ 
-              content: [{ type: "text", text: "No active ACK profile found for this user." }] 
-            }), { status: 403 });
-          }
-
-          // Execute the Core Logic (Vendored Core)
-          // We pass the tool call and the profile to the evaluation engine
-          const decision = await evaluatePolicy({
-            profile: userProfile,
-            action: {
-              tool: name,
-              command: args.command || '',
-              params: args
-            }
-          });
-
-          return new Response(JSON.stringify({
-            content: [{ 
-              type: "text", 
-              text: `ACK Decision: ${decision.decision}. Reason: ${decision.reasonCodes.join(', ')}` 
-            }]
-          }), {
-            headers: { 'Content-Type': 'application/json' }
-          });
+    if (url.pathname === "/mcp" || url.pathname === "/mcp/tools") {
+      if (request.method === "GET") {
+        return new Response(
+          JSON.stringify({
+            tools: HOSTED_TOOLS.map((t) => ({ name: t.name, description: t.description, inputSchema: t.inputSchema })),
+          }),
+          { headers: { "content-type": "application/json" } }
+        );
+      }
+      if (request.method === "POST") {
+        const identity = resolveIdentity(request, env);
+        if (!identity) {
+          return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401, headers: { "content-type": "application/json" } });
         }
-      } catch (e) {
-        return new Response(JSON.stringify({ error: e.message }), { status: 500 });
+        return mcpHandler(request, env);
       }
     }
 
-    return new Response('Not Found', { status: 404 });
-  }
+    if (url.pathname === "/events" && request.method === "POST") {
+      const identity = resolveIdentity(request, env);
+      if (!identity) {
+        return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401, headers: { "content-type": "application/json" } });
+      }
+      return eventsHandler(request, env);
+    }
+
+    return new Response("Not Found", { status: 404 });
+  },
 };

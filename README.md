@@ -8,102 +8,249 @@
 [![MCP](https://img.shields.io/badge/MCP-Compatible-purple.svg?style=flat-square)](https://modelcontextprotocol.io/)
 [![Provider Agnostic](https://img.shields.io/badge/Provider-Agnostic-success.svg?style=flat-square)](#)
 
-Global MCP Bridge for standalone applications and agent systems. It provides
-provider-neutral policy enforcement, identity, persistent storage, and
-telemetry collection for RL, evaluation, analytics, replay, and downstream
-dataset generation. ChatGPT is one adapter; it is not the service identity.
+**MCP Bridgelement** is a standalone, provider-agnostic MCP (Model Context Protocol) bridge that delivers policy enforcement, identity resolution, persistent storage, and telemetry collection for any LLM provider, agent framework, or local daemon. It is a complete, independently deployable product with zero required dependencies on the Agent Character Kit or any other ecosystem.
 
-Spec: [`../agent-character-kit/GPT-INTEGRATION-SPEC.md`](../agent-character-kit/GPT-INTEGRATION-SPEC.md)
+ChatGPT is one possible adapter; it is not the service identity. The bridge works with any MCP-compatible client.
 
-## What this is
+## What This Is
 
-- Cloudflare Worker `fetch` handler at `POST /mcp`
-- D1 schema in `migrations/0001_init.sql` (MemoryStore in tests)
-- Identity from the authenticated connection, never from `user_id` args
-- Enforcement via `packages/core` `evaluatePolicy` (same engine as local)
-- Fail-closed storage/worker failures return `decision: unavailable`
-- No `@modelcontextprotocol/sdk`, no Apps SDK widget, no nested `mcp-server/src`
+- **Cloudflare Worker** `fetch` handler at `POST /mcp` (and `GET /mcp` for tools discovery)
+- **D1 schema** in `migrations/` (MemoryStore for local testing)
+- **Identity** derived from the authenticated connection, never from `user_id` arguments supplied by the model
+- **Enforcement** via vendored `evaluatePolicy` engine — same logic as local daemons
+- **Fail-closed** storage/worker failures return `decision: unavailable`, never `allow`
+- **No** `@modelcontextprotocol/sdk`, **no** Apps SDK widget, **no** nested MCP server
 
-## Local tests
+## Why It Exists
 
-From the kit root after `npm install`:
+LLM providers and agent frameworks need a neutral, auditable enforcement layer that:
+1. **Resolves identity** from the actual authenticated connection (OAuth, JWT, Access, etc.)
+2. **Evaluates policy** against versioned profiles stored in durable storage
+3. **Emits canonical telemetry** for RL, evaluation, analytics, replay, and dataset generation
+4. **Runs anywhere** — Cloudflare Workers, Node.js, Deno, Bun — with the same logic
+5. **Depends on nothing** — zero external npm dependencies for core enforcement
+
+## Quick Start
+
+### Local Development
 
 ```bash
-node --test plugins/mcp-bridgelement/src/*.test.js packages/config-schema/src/*.test.js
-```
-
-Or from this directory:
-
-```bash
+# From the plugin directory
+cd plugins/mcp-bridgelement
+npm install
 npm test
 ```
 
-## Deploy (not done until secrets exist)
+### Deploy to Cloudflare Workers
 
-1. Create a D1 database; put its id in `wrangler.jsonc`.
-2. `npx wrangler d1 migrations apply ack-universal`
-3. Set Worker secrets (`ACK_BOOTSTRAP_TOKEN` is not a user identity).
-4. Deploy a stable HTTPS hostname.
-5. Point any compatible MCP client, including ChatGPT, at `https://<host>/mcp`.
+1. **Create D1 database** and note its ID
+2. **Configure `wrangler.jsonc`** with the D1 database ID
+3. **Run migrations**:
+   ```bash
+   npx wrangler d1 migrations apply ack-universal
+   ```
+4. **Set Worker secrets** (via `wrangler secret put` or dashboard):
+   - `ACK_BOOTSTRAP_TOKEN` — Admin bootstrap token (NOT a user identity)
+   - `ACK_PROVIDER` — Provider identity (default: `agnostic`)
+   - `ACK_DEFAULT_AGENT` — Default agent ID (default: `default-agent`)
+5. **Deploy**:
+   ```bash
+   npx wrangler deploy
+   ```
+6. **Point any MCP client** at `https://<your-worker>.<subdomain>.workers.dev/mcp`
 
-Do not put access tokens in D1. Do not present `install.sh` as a ChatGPT
-prerequisite.
+## Contracts, Schemas & Protocols
 
-Telemetry: `ack_ingest_event` / `POST /events` print canonical facts into
-D1 (`enforcement_events`). `ack_list_events` lists the workspace.
-The bridge defaults to D1; local services default to JSONL and may select
-`ACK_EVENT_SINK=local|d1|both`. See `docs/universal-service.md`.
+### MCP Contract (`vendor/mcp-contract`)
+
+Defines the complete MCP tool surface exposed by the bridge:
+
+| Tool | Purpose |
+|------|---------|
+| `ack_get_status` | Current mode, profile, provider, installation |
+| `ack_get_active_profile` | Full active profile |
+| `ack_list_profiles` | All profiles for the tenant |
+| `ack_get_policy` | Resolved policy for a profile |
+| `ack_get_recent_decisions` | Decision history |
+| `ack_create_profile` / `ack_update_profile` / `ack_select_profile` | Profile management |
+| `ack_configure_habit` | Habit configuration |
+| `ack_set_enforcement_mode` | Switch enforcement mode |
+| `ack_check_action` | **Core enforcement** — evaluates tool/command against policy |
+| `ack_acknowledge_hold` | Acknowledge a held action |
+| `ack_record_decision` | Record an external decision |
+| `ack_ingest_event` / `ack_list_events` | Telemetry ingestion & query |
+| `ack_register_component` / `ack_list_components` | Component registry |
+| `ack_register_attribute` / `ack_list_attributes` | Attribute registry |
+| `ack_register_event_schema` / `ack_list_event_schemas` | Event schema registry |
+| `ack_record_intervention` / `ack_list_interventions` | Intervention log |
+| `ack_report_watchdog_state` | Watchdog lease reporting |
+| `ack_export_user_data` / `ack_delete_user_data` | GDPR/export |
+| `ack_revoke_installation` | Revoke installation |
+
+Each tool has a complete JSON Schema (`inputSchema` / `outputSchema`) for MCP introspection.
+
+### Config Schema (`vendor/config-schema`)
+
+Validates and normalizes profile structures:
+
+- `defaultProfile(input)` — Returns a complete profile with defaults
+- `validateProfile(input)` — Returns `{ ok, profile?, errors[] }`
+- `profileToPolicy(profile)` — Compiles profile → policy for `evaluatePolicy`
+
+### Protocol (`vendor/protocol`)
+
+Core protocol constants and effects:
+
+- `EFFECTS = { ALLOW, DENY, HOLD }`
+- `EVENT_TYPE` — Canonical event type enum
+- Policy evaluation result shape
+
+### Events (`vendor/events`)
+
+Telemetry event infrastructure:
+
+- `EVENT_TYPE` — All canonical event types (session, episode, task, run, policy, tool, habit, ack, protocol, component, attribute, schema, intervention, watchdog)
+- `createEventSink(service, env, store, identity)` — Creates a sink for appending events
+- `redact(payload)` — PII redaction for event payloads
+
+### Core (`vendor/core`)
+
+Policy engine:
+
+- `evaluatePolicy({ tool, command }, policy)` — Returns `{ effect, decisionId, reasonCodes }`
+- `profileToPolicy(profile)` — Compiles profile → policy object
 
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    MCP Bridgelement                          │
-│  ┌─────────────┐  ┌──────────────┐  ┌────────────────────┐  │
-│  │   Identity  │  │  Enforcement │  │     Storage        │  │
-│  │  (agnostic) │──▶│  (evaluatePolicy)│◀──│  (D1 / Memory)   │  │
-│  └─────────────┘  └──────────────┘  └────────────────────┘  │
-│         │                  │                     │           │
-│         ▼                  ▼                     ▼           │
-│  ┌─────────────────────────────────────────────────────┐    │
-│  │              Telemetry Collection                    │    │
-│  │  enforcement_events (D1) / JSONL (local)            │    │
-│  └─────────────────────────────────────────────────────┘    │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                        MCP Bridgelement                          │
+│  ┌──────────────┐  ┌──────────────────┐  ┌──────────────────┐   │
+│  │   Identity   │  │   Enforcement    │  │     Storage      │   │
+│  │  Resolution  │──▶│  (evaluatePolicy)│◀──│  (D1 / Memory)   │   │
+│  │  (agnostic)  │  │   (vendored)     │  │   (pluggable)    │   │
+│  └──────────────┘  └──────────────────┘  └──────────────────┘   │
+│         │                  │                     │               │
+│         ▼                  ▼                     ▼               │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │                    Telemetry Collection                   │   │
+│  │  enforcement_events (D1) / JSONL (local) / custom sink   │   │
+│  └──────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────┘
 ```
+
+### Data Flow
+
+1. **Request arrives** at `POST /mcp` with MCP JSON-RPC
+2. **Identity resolved** from headers (OAuth, CF Access, test header, etc.)
+3. **Tool dispatched** to handler in `tools.js`
+4. **Profile loaded** from storage (D1 or Memory)
+5. **Policy evaluated** via vendored `evaluatePolicy`
+6. **Decision recorded** in `tool_decisions` table
+7. **RL event emitted** to `enforcement_events` with hierarchical IDs
+8. **Response returned** to client with decision + telemetry metadata
+
+### Hierarchical Event IDs
+
+Every event carries full hierarchy for RL traceability:
+```
+sessionId → episodeId → taskId → runId
+```
+
+Counterfactual `proposedAction` is always recorded alongside the actual decision.
 
 ## Configuration
 
 | Environment Variable | Description | Default |
 |---------------------|-------------|---------|
 | `ACK_EVENT_SERVICE` | Service identity for telemetry | `agnostic` |
-| `ACK_EVENT_SINK` | Event sink: `local`, `d1`, `both` | `d1` (bridge) / `local` (daemon) |
+| `ACK_EVENT_SINK` | Event sink: `local`, `d1`, `both` | `d1` (bridge) |
 | `ACK_EVENT_URL` | D1 Worker endpoint for local→hosted | — |
-| `ACK_BOOTSTRAP_TOKEN` | Admin bootstrap token (not user identity) | — |
+| `ACK_BOOTSTRAP_TOKEN` | Admin bootstrap token (NOT user identity) | — |
+| `ACK_PROVIDER` | Provider identity for identity resolution | `agnostic` |
+| `ACK_DEFAULT_AGENT` | Default agent ID when not provided | `default-agent` |
+| `ACK_DEFAULT_WORKSPACE_ID` | Default workspace for CF Access auth | — |
 
 ## Project Structure
 
 ```
 plugins/mcp-bridgelement/
 ├── src/
-│   ├── index.js              # Worker entry point
-│   ├── mcp.js                # MCP protocol handler
-│   ├── auth.js               # Identity extraction
-│   ├── enforcement.js        # Policy evaluation
-│   ├── ids.js                # ID utilities
-│   ├── rl-events.js          # Telemetry events
-│   ├── tools.js              # MCP tool definitions
+│   ├── index.js              # Worker entry point (fetch handler)
+│   ├── mcp.js                # MCP protocol handler (JSON-RPC)
+│   ├── auth.js               # Identity extraction from request
+│   ├── enforcement.js        # Policy evaluation (vendored engine)
+│   ├── ids.js                # ID generation utilities
+│   ├── rl-events.js          # Telemetry event building & emission
+│   ├── tools.js              # MCP tool definitions & handlers
 │   └── storage/
-│       ├── d1.js             # D1 storage adapter
-│       └── memory.js         # In-memory storage (tests)
+│       ├── d1.js             # D1 storage adapter (production)
+│       └── memory.js         # In-memory storage (tests/local)
 ├── migrations/
-│   ├── 0001_init.sql         # Core schema
-│   ├── 0002_rl_events.sql    # RL events
-│   └── 0003_universal_telemetry.sql  # Universal telemetry
-├── wrangler.jsonc            # Cloudflare Worker config
+│   ├── 0001_init.sql         # Core schema (workspaces, users, profiles, decisions)
+│   ├── 0002_rl_events.sql    # RL events table (enforcement_events)
+│   └── 0003_universal_telemetry.sql  # Telemetry registry (components, attributes, schemas, interventions)
+├── vendor/
+│   ├── mcp-contract/         # MCP tool definitions & schemas
+│   ├── config-schema/        # Profile validation & policy compilation
+│   ├── protocol/             # Core protocol constants & effects
+│   ├── events/               # Event types, sinks, redaction
+│   └── core/                 # Policy engine (evaluatePolicy)
+├── wrangler.jsonc            # Cloudflare Worker configuration
 ├── package.json
-└── README.md
+├── AGENTS.md                 # Agent-facing architecture & gotchas
+└── README.md                 # This file
 ```
+
+## Integration
+
+### As an MCP Server
+
+Any MCP-compatible client can connect:
+
+```json
+{
+  "mcpServers": {
+    "bridgelement": {
+      "command": "npx",
+      "args": ["mcp-remote", "https://your-bridgelement.workers.dev/mcp"]
+    }
+  }
+}
+```
+
+Or via HTTP transport directly.
+
+### As a Library
+
+Import individual modules for custom integrations:
+
+```javascript
+import { evaluatePolicy } from '@the-federation/mcp-bridgelement/vendor/core';
+import { defaultProfile, validateProfile } from '@the-federation/mcp-bridgelement/vendor/config-schema';
+import { EVENT_TYPE, createEventSink } from '@the-federation/mcp-bridgelement/vendor/events';
+```
+
+### Identity Integration
+
+The bridge extracts identity from:
+- **Cloudflare Access**: `cf-access-authenticated-user-email` + `x-ack-workspace-id`
+- **OAuth/JWT**: Custom headers (`x-ack-user-id`, `x-ack-installation-id`, etc.)
+- **Test header**: `x-ack-test-identity` (when `ACK_ALLOW_TEST_IDENTITY=1`)
+- **Bootstrap token**: `Authorization: Bearer <token>` (admin only, NOT user identity)
+
+Model-supplied `user_id` / `workspace_id` in tool arguments are **always ignored**.
+
+## Telemetry
+
+All enforcement decisions emit canonical events to `enforcement_events` (D1) with:
+
+- Full hierarchical IDs: `sessionId → episodeId → taskId → runId`
+- Counterfactual `proposedAction` for RL training
+- Redacted payloads (PII stripped via `redact()`)
+- Versioned schemas via telemetry registry
+
+Query via `ack_list_events` MCP tool or `POST /events` for batch ingestion.
 
 ## License
 

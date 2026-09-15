@@ -3,7 +3,7 @@ import { test } from "node:test";
 import worker from "./index.js";
 import { MemoryStore } from "./storage/memory.js";
 import { handleMcpJsonRpc } from "./mcp.js";
-import { HOSTED_TOOLS } from "@drdeeks/character-kit-mcp-contract";
+import { HOSTED_TOOLS } from "../vendor/mcp-contract/src/hosted-tools.js";
 
 const env = { ACK_ALLOW_TEST_IDENTITY: "1", ACK_VERSION: "1.9.1" };
 
@@ -109,7 +109,7 @@ test("missing auth is 401; /health is public", async () => {
   const denied = await worker.fetch(new Request("https://ack.example/mcp", {
     method: "POST",
     body: "{}",
-  }), { ACK_STORE: store });
+  }), { ...env, ACK_STORE: store });
   assert.equal(denied.status, 401);
   const health = await worker.fetch(new Request("https://ack.example/health"), { ACK_STORE: store });
   assert.equal(health.status, 200);

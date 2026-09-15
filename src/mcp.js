@@ -1,4 +1,4 @@
-import { HOSTED_TOOLS } from "@drdeeks/character-kit-mcp-contract";
+import { HOSTED_TOOLS } from "../vendor/mcp-contract/src/hosted-tools.js";
 import { AuthError, resolveIdentity } from "./auth.js";
 import { buildRlEvent } from "./rl-events.js";
 import { runHostedTool } from "./tools.js";

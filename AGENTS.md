@@ -1,41 +1,135 @@
-# MCP Bridgelement - Agent & Architecture Guide
+# MCP Bridgelement - Agent Architecture & Operations Guide
 
 ## Role & Purpose
-The **MCP Bridgelement** is the central, provider-agnostic gateway for the Agent Character Kit (ACK) ecosystem. It decouples the enforcement logic and telemetry collection from any specific LLM provider (ChatGPT, Claude, etc.) or local daemon.
 
-It acts as a "Universal Bridge" that handles:
-1. **Identity Resolution:** Mapping provider-specific auth (OAuth/JWT) to universal tenant/user IDs.
-2. **Policy Enforcement:** Running the `evaluatePolicy` engine to determine if a tool call is allowed, denied, or held.
-3. **Telemetry Sink:** Collecting all enforcement events into a durable D1 database for RL, analytics, and audit.
-4. **Storage abstraction:** Managing the persistence of profiles and habits across different environments.
+**MCP Bridgelement** (`@the-federation/mcp-bridgelement@0.1.0`) is a **standalone, provider-agnostic MCP bridge** — a complete, independently deployable product. It is NOT a component of the Agent Character Kit. It has zero required dependencies on ACK or any other ecosystem.
 
-## Architecture
+It provides:
+1. **Identity Resolution** — Maps provider-specific auth (OAuth, JWT, CF Access, custom headers) to universal tenant/user/installation IDs
+2. **Policy Enforcement** — Runs vendored `evaluatePolicy` engine against versioned profiles
+3. **Telemetry Collection** — Emits canonical RL events with hierarchical IDs to durable storage
+4. **Storage Abstraction** — Pluggable adapters (D1 production, Memory tests, custom)
 
-### High-Level Flow
-`Client (ChatGPT/Claude/etc.)` $\rightarrow$ `Bridgelement (Worker)` $\rightarrow$ `D1 (Storage)` $\rightarrow$ `Enforcement Engine`
+## Critical Architecture Invariants
 
-### Key Components
-- **`auth.js`**: Extracts identity from the authenticated connection. Defaults to `agnostic` for standalone use.
-- **`enforcement.js`**: The core decision engine. It consumes policies from D1 and applies them to the current request context.
-- **`rl-events.js`**: The telemetry pipeline. Every decision is recorded as an event for downstream dataset generation and evaluation.
-- **`storage/d1.js`**: The production adapter for Cloudflare D1.
-- **`mcp.js`**: Implements the Model Context Protocol to expose tools to the LLM.
+| Invariant | Enforcement |
+|-----------|-------------|
+| **Identity from connection, never model args** | `auth.js` ignores `user_id`/`workspace_id` in tool args; `ignoreModelIdentity()` strips them |
+| **Fail-closed on storage failure** | `enforcement.js` returns `decision: unavailable` on any storage error |
+| **Zero npm deps for core** | All enforcement/schema/protocol/events/core code is **vendored** under `vendor/` |
+| **Hierarchical event IDs** | Every event: `sessionId → episodeId → taskId → runId` + counterfactual `proposedAction` |
+| **Provider-agnostic** | No ChatGPT/Claude-specific logic; `ACK_PROVIDER` defaults to `agnostic` |
 
-## Integration for Consumers (e.g., Character Kit)
+## Repository State (v0.1.0)
 
-Other systems access the Bridgelement as a remote MCP server. 
+- **Package**: `@the-federation/mcp-bridgelement@0.1.0`
+- **Worker endpoint**: `bridgelement.drdeeks.xyz` (via `ack-universal.drdeeks.workers.dev`)
+- **D1 database**: `ack-universal`
+- **Character Kit reference**: `agent-character-kit@1.9.1` (vendored snapshot, not a dependency)
+- **All 14 tests pass**: `npm test` → green
 
-### Configuration
-Consumers must provide:
-- `ACK_EVENT_SERVICE`: The identity of the service (e.g., `character-kit`).
-- `ACK_EVENT_URL`: The endpoint of the Bridgelement Worker.
+## Gotchas & Overlooked Details
 
-### Access Pattern
-1. **Authentication**: The consumer handles the OAuth flow; the Bridgelement derives the `user_id` from the request.
-2. **Enforcement**: The consumer calls the MCP tools (e.g., `ack_check_action`) to verify if a specific action is permitted by the current profile.
-3. **Telemetry**: The Bridgelement automatically logs the event; the consumer only needs to provide the context.
+### 1. Auth Middleware Placement
+`resolveIdentity()` is called in `index.js` **per-route**, not globally. `/health` and `GET /mcp` return `null` identity (public). POST `/mcp` and POST `/events` **require** valid identity → 401 if missing.
 
-## Operational Identity
-- **Package**: `@the-federation/mcp-bridgelement`
-- **Endpoint**: `bridgelement.drdeeks.xyz` (via `ack-universal.drdeeks.workers.dev`)
-- **Database**: `ack-universal` (D1)
+### 2. Test Identity Header
+Tests **must** pass `x-ack-test-identity` header AND `ACK_ALLOW_TEST_IDENTITY=1` in env. The test helper in `hosted.test.js` does this via `mcp()` wrapper.
+
+### 3. Vendored Imports Are Absolute From Source Root
+```
+src/tools.js          →  ../vendor/mcp-contract/src/hosted-tools.js
+src/rl-events.js      →  ../vendor/events/src/index.js
+src/enforcement.js    →  ../vendor/core/src/index.js, ../vendor/protocol/src/index.js, ../vendor/config-schema/src/profile.js
+src/storage/*.js      →  ../../vendor/config-schema/src/profile.js
+```
+**Never** use `@drdeeks/character-kit-*` specifiers — they don't exist in this package.
+
+### 4. D1 Migrations Must Match Storage Code
+- `0001_init.sql` — core tables (workspaces, users, profiles, decisions, holds, acks, agents, bindings, watchdog, audit)
+- `0002_rl_events.sql` — `enforcement_events` with ALL hierarchical columns
+- `0003_universal_telemetry.sql` — component/attribute/schema/intervention registry
+Storage code (`d1.js`) assumes exact column names. Drift = runtime errors.
+
+### 5. Rate Limiting Is Per-User/Minute In-Memory
+`D1Store.rateLimitWrite()` uses a `Map` keyed by `${userId}:${minute}`. Resets on worker restart. Not distributed.
+
+### 6. Bootstrap Token ≠ User Identity
+`ACK_BOOTSTRAP_TOKEN` in `Authorization: Bearer` header throws `AuthError("bootstrap token is not a user identity")`. It's for admin setup only.
+
+### 7. Event Redaction Happens At Sink, Not Build
+`buildRlEvent()` calls `redact()` on payload fields. The sink (`createEventSink`) may apply additional redaction. Don't assume raw payloads reach storage.
+
+### 8. `profileToPolicy` Is The Single Compilation Path
+`enforcement.js` imports `profileToPolicy` from vendored `config-schema`. Profiles → Policy → `evaluatePolicy`. No alternate paths.
+
+### 9. Watchdog Lease Is Monotonic
+`reportWatchdog()` only increments `lease_version`. Clients sending stale versions get current state back (no update).
+
+### 10. Component/Attribute/Schema Registry Is Workspace-Scoped
+Telemetry registry tables are keyed by `workspace_id`. No cross-workspace visibility.
+
+## Key Files Quick Reference
+
+| File | Responsibility |
+|------|----------------|
+| `src/index.js` | Worker fetch handler, routing, per-route auth |
+| `src/auth.js` | Identity extraction, test header, CF Access, bootstrap token |
+| `src/mcp.js` | JSON-RPC dispatch, `tools/list`, `tools/call` |
+| `src/tools.js` | 26 MCP tool implementations, all tenant-scoped |
+| `src/enforcement.js` | `checkAction`, `acknowledge`, `unavailable` — thin wrapper over vendored engine |
+| `src/rl-events.js` | `buildRlEvent`, `emitRlEvent`, `decisionEventType` mapping |
+| `src/storage/d1.js` | Production D1 adapter, all SQL, tenant enforcement |
+| `src/storage/memory.js` | Test/local adapter, same interface as D1 |
+| `src/ids.js` | `newId(prefix)`, `nowIso()` |
+| `vendor/*/src/*.js` | **Vendored** — do not edit; update by re-vendoring from ACK 1.9.1 |
+
+## Test Coverage (Hosted Tests)
+
+| Test | What It Verifies |
+|------|------------------|
+| `tools/list` | All 26 tools exposed with schemas |
+| `identity from connection` | Model `user_id` ignored; connection identity wins |
+| `tenant isolation` | User A cannot read User B's profiles |
+| `rm -rf denied` | Hard rule via shared PolicyEngine |
+| `fail-closed hold/ack` | Habit requires ack → hold → valid ack → acknowledge |
+| `missing auth = 401` | POST `/mcp` without identity → 401; `/health` → 200 |
+| `storage failure = unavailable` | Mock storage error → `decision: unavailable` |
+| `export/delete tenant-scoped` | User A delete doesn't affect User B |
+| `check_action → RL events` | Events written to `enforcement_events` with correct type |
+| `ingest workspace-visible` | Events visible to workspace, not cross-tenant |
+| `telemetry registry` | Components, attributes, schemas, interventions CRUD |
+| `POST /events batch` | Batch ingest with partial acceptance |
+| `store factory` | Injected > D1 > Memory fallback |
+| `provider/agent configurable` | `ACK_PROVIDER`, `ACK_DEFAULT_AGENT` env vars work |
+
+## Deployment Checklist
+
+- [ ] D1 database created, ID in `wrangler.jsonc`
+- [ ] Migrations applied: `wrangler d1 migrations apply ack-universal`
+- [ ] Secrets set: `ACK_BOOTSTRAP_TOKEN`, `ACK_PROVIDER`, `ACK_DEFAULT_AGENT`
+- [ ] `npm test` passes locally
+- [ ] `wrangler deploy` succeeds
+- [ ] `GET https://<host>/health` → `{ ok: true, version: "1.9.1" }`
+- [ ] `GET https://<host>/mcp` → tools list with 26 entries
+- [ ] `POST https://<host>/mcp` without auth → 401
+- [ ] `POST https://<host>/mcp` with test header → works
+
+## Re-vendoring Process (When ACK Updates)
+
+1. Update `agent-character-kit` to target version
+2. Run vendoring script (copies `packages/*/src` → `vendor/*/src`)
+3. Purge `package.json` from all `vendor/*/` subdirs
+4. Verify imports in `src/` resolve to `../vendor/...`
+5. Run `npm test` — must pass
+6. Bump `mcp-bridgelement` patch version
+
+## Version Lock
+
+| Component | Version | Source |
+|-----------|---------|--------|
+| `@the-federation/mcp-bridgelement` | 0.1.0 | This package |
+| Vendored Character Kit | 1.9.1 | `agent-character-kit@1.9.1` snapshot |
+| `ACK_VERSION` constant | 1.9.1 | Returned by `/health`, used in telemetry |
+
+**Never** publish a bridge version that doesn't match its vendored snapshot.

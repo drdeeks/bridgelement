@@ -1,4 +1,4 @@
-import { defaultProfile, validateProfile } from "@drdeeks/character-kit-config-schema";
+import { defaultProfile, validateProfile } from "../../vendor/config-schema/src/profile.js";
 import { newId, nowIso } from "../ids.js";
 
 /** Production D1 implementation of the store consumed by hosted tools. */

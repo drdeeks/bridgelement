@@ -1,5 +1,5 @@
-import { HOSTED_TOOLS } from "@drdeeks/character-kit-mcp-contract";
-import { EVENT_TYPE } from "@drdeeks/character-kit-events";
+import { HOSTED_TOOLS } from "../vendor/mcp-contract/src/hosted-tools.js";
+import { EVENT_TYPE } from "../vendor/events/src/index.js";
 import { ignoreModelIdentity } from "./auth.js";
 import { acknowledge, checkAction, unavailable } from "./enforcement.js";
 import { buildRlEvent, decisionEventType, emitRlEvent } from "./rl-events.js";

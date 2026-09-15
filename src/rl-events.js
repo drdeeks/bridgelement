@@ -1,4 +1,4 @@
-import { EVENT_TYPE, createEventSink, redact } from "@drdeeks/character-kit-events";
+import { EVENT_TYPE, createEventSink, redact } from "../vendor/events/src/index.js";
 import { newId, nowIso } from "./ids.js";
 
 export const KNOWN_EVENT_TYPES = new Set(Object.values(EVENT_TYPE));

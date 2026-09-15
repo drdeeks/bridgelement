@@ -43,7 +43,7 @@ export function resolveIdentity(request, env = {}) {
     throw new AuthError("bootstrap token is not a user identity");
   }
 
-  if (url.pathname === "/health") return null;
+  if (url.pathname === "/health" || url.pathname === "/mcp" || url.pathname === "/mcp/tools") return null;
   throw new AuthError("missing ChatGPT/OAuth identity");
 }
 
