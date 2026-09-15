@@ -1,66 +1,2003 @@
-# Dependencies
-node_modules/
-.pnpm-store/
+###############################################################################
+# UNIVERSAL .gitignore
+# Purpose:
+#   Portable, defensive baseline suitable for most repositories.
+#
+# Design:
+#   - Ignore machine-local state
+#   - Ignore credentials/secrets
+#   - Ignore dependencies and generated artifacts
+#   - Ignore build/test/cache output
+#   - Ignore common IDE/editor state
+#   - Ignore OS metadata
+#   - Ignore common language/package-manager artifacts
+#   - Avoid ignoring legitimate source/config files by default
+#
+# IMPORTANT:
+#   This is intentionally comprehensive. Repository-specific rules may still
+#   be required for unusual frameworks, generated assets, proprietary tooling,
+#   or custom build systems.
+###############################################################################
 
-# Build outputs
-dist/
-build/
-*.tsbuildinfo
 
-# Cloudflare Wrangler
-.wrangler/
-wrangler.toml
-wrangler.jsonc.local
+###############################################################################
+# 01. OPERATING SYSTEM / FILESYSTEM JUNK
+###############################################################################
 
-# IDE
-.vscode/
-.idea/
+# macOS
+.DS_Store
+.DS_Store?
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+.DocumentRevisions-V100
+.fseventsd
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+*.stackdump
+
+# Linux / desktop environments
+.directory
+.Trash-*
+.nfs*
+
+# Generic filesystem/editor lock files
 *.swp
 *.swo
+*.swn
+*.bak
+*.tmp
+*.temp
+*.orig
+*.rej
 *~
+.#*
+#*#
 
-# OS
-.DS_Store
-Thumbs.db
 
-# Logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
+###############################################################################
+# 02. EDITORS / IDEs
+###############################################################################
 
-# Test coverage
-coverage/
-.nyc_output/
+# Visual Studio Code
+.vscode/*
+!.vscode/settings.json.example
+!.vscode/extensions.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/*.example
+
+# JetBrains
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# Visual Studio
+.vs/
+*.user
+*.userosscache
+*.suo
+*.userprefs
+*.vcxproj.user
+
+# Eclipse
+.classpath
+.project
+.settings/
+
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/.nb-gradle/
+.nb-gradle/
+
+# Sublime Text
+*.sublime-workspace
+*.sublime-project
+
+# Vim
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+*.un~
+Session.vim
+Sessionx.vim
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list/
+tramp
+.#*
+
+# Zed
+.zed/
+
+# Fleet
+.fleet/
+
+# Cursor
+.cursor/
+
+# Windsurf
+.windsurf/
+
+# Local editor metadata
+.editorconfig.local
+
+
+###############################################################################
+# 03. AI / CODING-ASSISTANT LOCAL STATE
+###############################################################################
+
+# Generic AI/editor local state
+.ai/
+.ai-local/
+.ai-cache/
+.ai-state/
+.ai-work/
+.ai-tmp/
+
+# Common assistant/tool local directories
+.claude/
+.claude-local/
+.claude-cache/
+.cursor/
+.copilot/
+.codex/
+.opencode/
+.openclaw/
+.hermes/
+
+# NOTE:
+# If a repository intentionally tracks configuration from one of these tools,
+# use explicit negation rules in that repository's .gitignore rather than
+# removing the entire protection globally.
+
+
+###############################################################################
+# 04. ENVIRONMENT FILES / SECRETS / CREDENTIALS
+###############################################################################
 
 # Environment files
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
+!.env.sample
+!.env.template
+!.env.defaults
+!.env.test.example
+!.env.development.example
+!.env.production.example
+!.env.local.example
 
-# Secrets
-.secrets/
-*.key
+# Common secret/config variants
+*.secret
+*.secrets
+*.secret.*
+*.secrets.*
+*.credentials
+*.credentials.*
+credentials.json
+credentials.yml
+credentials.yaml
+secrets.json
+secrets.yml
+secrets.yaml
+secrets.toml
+
+# Private keys / certificates
 *.pem
+*.key
 *.p12
+*.pfx
+*.pkcs12
+*.jks
+*.keystore
+*.der
 
-# Cache
-.cache/
-.eslintcache
-.prettierrc
+# SSH
+id_rsa
+id_rsa.pub
+id_dsa
+id_dsa.pub
+id_ecdsa
+id_ecdsa.pub
+id_ed25519
+id_ed25519.pub
 
-# Temporary files
+# Cloud/provider credentials
+.aws/
+.azure/
+.gcloud/
+.google-cloud/
+.gcpsa/
+.config/gcloud/
+.kube/
+.oci/
+.docker/config.json
+
+# Terraform credentials / local state
+.terraformrc
+terraform.rc
+
+# Auth/token files
+*.token
+*.tokens
+*.auth
+*.auth.json
+auth.json
+token.json
+tokens.json
+
+# Local password stores / credential exports
+*.password
+*.passwords
+*.passwd
+*.htpasswd
+
+# Signing material
+*.asc
+*.gpg
+*.pgp
+
+
+###############################################################################
+# 05. DEPENDENCIES / PACKAGE TREES
+###############################################################################
+
+# JavaScript / Node
+node_modules/
+jspm_packages/
+bower_components/
+
+# Package-manager caches/local stores
+.npm/
+.npm-cache/
+.pnpm-store/
+.yarn/cache/
+.yarn/unplugged/
+.yarn/install-state.gz
+.yarn/build-state.yml
+
+# Python
+.venv/
+venv/
+env/
+ENV/
+.python-version.local
+__pypackages__/
+
+# Ruby
+.bundle/
+
+# PHP
+/vendor/
+
+# Rust
+/target/
+
+# Go
+/vendor/
+
+# Dart / Flutter
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+build/
+
+# Java / JVM
+.gradle/
+.mvn/timing.properties
+
+# Elixir
+/deps/
+/_build/
+
+# Swift / Xcode
+.build/
+DerivedData/
+Packages/
+xcuserdata/
+
+# CocoaPods
+Pods/
+
+# Composer
+/vendor/
+
+# .NET / NuGet
+packages/
+.nuget/
+*.nupkg
+*.snupkg
+
+# C/C++ dependency managers
+.conan/
+.vcpkg/
+.bazel-cache/
+
+# Perl
+local/
+blib/
+
+# Haskell
+dist/
+dist-newstyle/
+
+# Julia
+Manifest.toml
+
+# R
+.Rproj.user/
+
+# Erlang
+.rebar3/
+
+# Clojure
+.cpcache/
+
+# Scala
+.bsp/
+
+
+###############################################################################
+# 06. COMPILED / BINARY / BUILD OUTPUT
+###############################################################################
+
+# Generic build directories
+build/
+builds/
+dist/
+release/
+releases/
+out/
+output/
+outputs/
+bin/
+obj/
+debug/
+Debug/
+release/
+Release/
+
+# Generic generated artifacts
+generated/
+generated-files/
+generated-files/
+gen/
 tmp/
 temp/
+.cache/
+.cache-*/
+.cache_*/
+
+# Native binaries
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.dylib
+*.dll
+*.exe
+*.com
+*.msi
+*.app
+*.dSYM/
+*.pdb
+*.ilk
+*.exp
+
+# Static libraries / archives
+*.ar
+*.la
+
+# Java / JVM
+*.class
+*.jar
+*.war
+*.ear
+
+# Android
+*.apk
+*.aab
+captures/
+.externalNativeBuild/
+.cxx/
+
+# WebAssembly
+*.wasm
+
+# Python compiled
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+*.egg-info/
+.eggs/
+
+# Python distributions
+*.egg
+*.whl
+
+
+###############################################################################
+# 07. JAVASCRIPT / TYPESCRIPT / WEB BUILD ARTIFACTS
+###############################################################################
+
+# Framework/build caches
+.next/
+.nuxt/
+.nuxt/
+.svelte-kit/
+.angular/
+.angular-cache/
+.parcel-cache/
+.turbo/
+.turbo-cache/
+.vite/
+.vite-cache/
+.eslintcache
+.stylelintcache
+.rspack/
+.webpack/
+.rollup.cache/
+.cache/
+
+# Astro
+.astro/
+
+# Gatsby
+.cache/
+public/
+
+# Remix
+.build/
+
+# Docusaurus
+.docusaurus/
+
+# Storybook
+storybook-static/
+
+# TypeScript incremental state
+*.tsbuildinfo
+
+# JavaScript test coverage
+coverage/
+.nyc_output/
+
+# Test artifacts
+test-results/
+playwright-report/
+blob-report/
+allure-results/
+allure-report/
+
+
+###############################################################################
+# 08. PYTHON TOOLING / TESTING / NOTEBOOKS
+###############################################################################
+
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.pyre/
+.pytype/
+.pyright/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.pytest_cache/
+hypothesis/
+.pyre/
+.ipynb_checkpoints/
+
+# Python packaging/build metadata
+pip-wheel-metadata/
+*.egg-info/
+MANIFEST
+MANIFEST.in.bak
+
+
+###############################################################################
+# 09. RUBY / RAILS
+###############################################################################
+
+.bundle/
+vendor/bundle/
+log/
+tmp/
+.byebug_history
+
+
+###############################################################################
+# 10. PHP / COMPOSER / LARAVEL
+###############################################################################
+
+/vendor/
+.phpunit.result.cache
+.phpunit.cache/
+.php-cs-fixer.cache
+.php-cs-fixer.php
+.phpstan.cache
+.phpstan/
+
+
+###############################################################################
+# 11. JAVA / GRADLE / MAVEN
+###############################################################################
+
+.gradle/
+build/
+target/
+*.class
+*.log
+
+# Maven local state
+.mvn/wrapper/maven-wrapper.jar
+
+# IntelliJ build artifacts
+out/
+
+
+###############################################################################
+# 12. C / C++ / CMAKE / NATIVE
+###############################################################################
+
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+Makefile.in
+*.cmake.user
+compile_commands.json
+
+# Autotools
+autom4te.cache/
+aclocal.m4
+config.h
+config.log
+config.status
+libtool
+ltmain.sh
+m4/libtool.m4
+
+# Ninja
+.ninja_deps
+.ninja_log
+
+
+###############################################################################
+# 13. RUST
+###############################################################################
+
+/target/
+Cargo.lock
+
+# IMPORTANT:
+# Cargo.lock is commonly committed for applications/binaries but may be
+# intentionally omitted for libraries. If your project is an application,
+# remove the Cargo.lock rule.
+
+
+###############################################################################
+# 14. GO
+###############################################################################
+
+/bin/
+vendor/
+*.test
+*.out
+
+
+###############################################################################
+# 15. DART / FLUTTER
+###############################################################################
+
+.dart_tool/
+.packages
+.pub/
+.pub-cache/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+.metadata
+*.iml
+
+
+###############################################################################
+# 16. SWIFT / XCODE
+###############################################################################
+
+.build/
+DerivedData/
+xcuserdata/
+*.xcuserstate
+*.xcscmblueprint
+*.xccheckout
+Pods/
+Carthage/Build/
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/
+fastlane/test_output/
+
+
+###############################################################################
+# 17. ANDROID / GRADLE
+###############################################################################
+
+.gradle/
+local.properties
+captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+*.ap_
+*.dex
+
+
+###############################################################################
+# 18. .NET / VISUAL STUDIO
+###############################################################################
+
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+ARM/
+ARM64/
+TestResults/
+.vs/
+*.user
+*.suo
+*.userprefs
+*.nupkg
+*.snupkg
+
+
+###############################################################################
+# 19. DATABASES / LOCAL DEVELOPMENT DATA
+###############################################################################
+
+# SQLite
+*.sqlite
+*.sqlite3
+*.db
+*.db3
+
+# Local database journals / temporary files
+*.db-journal
+*.db-shm
+*.db-wal
+
+# Local database dumps
+*.dump
+*.dump.sql
+*.sqlite.bak
+*.sqlite.backup
+
+# NOTE:
+# Remove these rules if the repository intentionally versions database files,
+# fixtures, migrations, or seed databases.
+
+
+###############################################################################
+# 20. LOGS / DIAGNOSTICS
+###############################################################################
+
+*.log
+*.log.*
+logs/
+log/
+*.trace
+*.trace.*
+*.stacktrace
+*.dump
+crashdumps/
+crash-reports/
+diagnostics/
+diagnostic/
+reports/
+
+
+###############################################################################
+# 21. TEST / COVERAGE / PROFILING
+###############################################################################
+
+coverage/
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+.nyc_output/
+test-results/
+test-results-*/
+playwright-report/
+blob-report/
+allure-results/
+allure-report/
+junit.xml
+test-report.xml
+*.prof
+*.profraw
+*.profdata
+
+
+###############################################################################
+# 22. DOCUMENT / OFFICE TEMPORARY FILES
+###############################################################################
+
+# Microsoft Office lock files
+~$*.doc
+~$*.docx
+~$*.xls
+~$*.xlsx
+~$*.ppt
+~$*.pptx
+
+# LibreOffice
+.~lock.*
+
+# Generic Office recovery files
 *.tmp
 
-# Trash (recovery only)
+
+###############################################################################
+# 23. ARCHIVES / PACKAGES / GENERATED DISTRIBUTIONS
+###############################################################################
+
+# Common generated packages
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.tar.bz2
+*.tbz
+*.tbz2
+*.tar.xz
+*.txz
+*.7z
+*.rar
+
+# Installer/package output
+*.deb
+*.rpm
+*.pkg
+*.dmg
+*.iso
+*.img
+
+# Python packages
+*.whl
+*.egg
+
+# Node packages
+*.tgz
+
+
+###############################################################################
+# 24. GENERATED API / CODEGEN / DOCUMENTATION OUTPUT
+###############################################################################
+
+# Common generated documentation
+_site/
+site/
+docs/_build/
+docs/.cache/
+.sphinx/
+.doxygen/
+doxygen/
+
+# Common API/code generation output
+openapi-generated/
+swagger-generated/
+generated-api/
+generated-client/
+generated-server/
+
+# IMPORTANT:
+# These are intentionally conservative. If your repository commits generated
+# source as part of its distribution, explicitly unignore it.
+
+
+###############################################################################
+# 25. INFRASTRUCTURE AS CODE
+###############################################################################
+
+# Terraform
+.terraform/
+.terraform.lock.hcl
+
+# Terraform state and plans
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.tfplan.*
+
+# Terragrunt
+.terragrunt-cache/
+
+# Pulumi
+.pulumi/
+Pulumi.*.yaml
+!Pulumi.yaml
+!Pulumi.*.yaml.example
+
+# Ansible
+.retry
+*.retry
+
+# Serverless Framework
+.serverless/
+
+# AWS SAM
+.aws-sam/
+
+# CDK
+.cdk.staging/
+
+# CloudFormation local artifacts
+.packages/
+
+# Kubernetes local/generated state
+.kube/
+
+
+###############################################################################
+# 26. DOCKER
+###############################################################################
+
+# Docker local state
+.docker/
+docker-data/
+docker-volumes/
+
+# Docker Compose overrides intended for local use
+docker-compose.override.yml
+docker-compose.local.yml
+docker-compose.*.local.yml
+
+
+###############################################################################
+# 27. CI / LOCAL AUTOMATION ARTIFACTS
+###############################################################################
+
+# Generic local CI output
+.ci-cache/
+.ci-local/
+.github-local/
+.gitlab-local/
+
+# Test/build service artifacts
+artifacts/
+artifacts-local/
+.local-artifacts/
+
+
+###############################################################################
+# 28. GIT INTERNAL / LOCAL WORKTREES
+###############################################################################
+
+# Git worktree metadata
+.git-worktrees/
+
+# Common patch artifacts
+*.patch.rej
+*.orig
+
+# GitHub CLI local state
+.gh/
+
+
+###############################################################################
+# 29. PACKAGE MANAGER LOCK / LOCAL STATE FILES
+###############################################################################
+
+# Yarn
+.yarn/install-state.gz
+.yarn/build-state.yml
+
+# pnpm
+.pnpm-debug.log
+pnpm-debug.log
+
+# npm
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Bun
+bun-debug.log*
+.bun/
+
+# Deno
+.deno/
+
+
+###############################################################################
+# 30. JAVASCRIPT TOOLING LOCAL STATE
+###############################################################################
+
+.eslintcache
+.stylelintcache
+.node_repl_history
+.npm/
+.npm-cache/
+.yarn/
+.pnpm-store/
+
+# Keep committed Yarn Berry configuration if desired
+!.yarnrc.yml
+
+
+###############################################################################
+# 31. SHELL / REPL HISTORY
+###############################################################################
+
+.bash_history
+.zsh_history
+.fish_history
+.python_history
+.node_repl_history
+.irb_history
+.psql_history
+.mysql_history
+.sqlite_history
+
+
+###############################################################################
+# 32. LOCAL CONFIGURATION
+###############################################################################
+
+# Generic local-only configuration
+*.local
+*.local.*
+.local/
+.local-*/
+.local_*/
+
+# Explicitly protect common examples/templates
+!*.local.example
+!*.local.sample
+!*.local.template
+
+
+###############################################################################
+# 33. GENERATED ENVIRONMENT / MACHINE IDENTIFIERS
+###############################################################################
+
+.machine/
+.machine-id
+.host-id
+.machine.json
+.local-machine.json
+.environment.local.json
+
+
+###############################################################################
+# 34. CACHES
+###############################################################################
+
+.cache/
+.cache-*/
+.cache_*/
+caches/
+.cache-loader/
+.eslintcache
+.stylelintcache
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.parcel-cache/
+.turbo/
+.next/cache/
+.nuxt/cache/
+.angular/cache/
+.vite/
+.vite-cache/
+
+
+###############################################################################
+# 35. TEMPORARY WORKSPACE DIRECTORIES
+###############################################################################
+
+tmp/
+temp/
+temporary/
+work/
+workspace/
+scratch/
+staging/
+staging-local/
 .trash/
+.archive/
 
-# D1 local database
-*.sqlite3
-*.sqlite3-journal
 
-# TypeScript
-*.tsbuildinfo
+
+###############################################################################
+# 36. BACKUPS
+###############################################################################
+
+# Editor/application backups
+*.backup
+*.back
+*.old
+*.orig
+*.save
+*.save.*
+*.backup.*
+*.bak.*
+
+# Explicit backup directories
+backup/
+backups/
+_backup/
+_backups/
+backup-*/
+backups-*/
+
+
+###############################################################################
+# 37. GENERATED LOCK / PID / SOCKET FILES
+###############################################################################
+
+*.pid
+*.pid.lock
+*.lock
+*.socket
+*.sock
+
+# Exceptions for commonly committed lockfiles
+!package-lock.json
+!npm-shrinkwrap.json
+!yarn.lock
+!pnpm-lock.yaml
+!bun.lock
+!bun.lockb
+!composer.lock
+!Gemfile.lock
+!Podfile.lock
+!Package.resolved
+!poetry.lock
+!Pipfile.lock
+!uv.lock
+!go.sum
+!Cargo.lock
+
+
+###############################################################################
+# 38. LOCAL DEVELOPMENT CERTIFICATES
+###############################################################################
+
+# mkcert
+*.pem
+*.key
+
+# Local HTTPS certificates
+certs/
+certificates/
+ssl/
+tls/
+
+# Keep explicit public certificate examples if needed
+!certs/*.example
+!certificates/*.example
+
+
+###############################################################################
+# 39. CLOUD / DEPLOYMENT LOCAL ARTIFACTS
+###############################################################################
+
+.vercel/
+.netlify/
+.wrangler/
+.cloudflare/
+.firebase/
+.firebaserc.local
+
+# SST
+.sst/
+
+# Serverless
+.serverless/
+
+# Amplify
+.amplify/
+amplify/#current-cloud-backend.zip
+
+
+###############################################################################
+# 40. DEVELOPMENT ENVIRONMENT MANAGERS
+###############################################################################
+
+# direnv
+.envrc
+
+# Nix local state
+.direnv/
+
+# mise/asdf local state
+.tool-versions.local
+
+# Devbox
+.devenv/
+
+
+###############################################################################
+# 41. CONTAINERS / VM LOCAL STATE
+###############################################################################
+
+.vagrant/
+.vagrant.d/
+.terraform/
+.terraform.d/
+
+# Virtual environments / VM disks
+*.vdi
+*.vmdk
+*.vhd
+*.vhdx
+*.qcow
+*.qcow2
+*.ova
+*.ovf
+
+
+###############################################################################
+# 42. LOCAL LLM / ML ARTIFACTS
+###############################################################################
+
+# Common model/cache directories
+.models/
+.model-cache/
+.model-cache-*/
+.huggingface/
+.cache/huggingface/
+.cache/torch/
+.cache/transformers/
+
+# Model weights
+*.safetensors
+*.ckpt
+*.pt
+*.pth
+*.onnx
+
+# ML experiment output
+runs/
+wandb/
+mlruns/
+tensorboard/
+lightning_logs/
+
+
+###############################################################################
+# 43. DATA SCIENCE / GENERATED DATA
+###############################################################################
+
+# Generic generated datasets
+data/tmp/
+data/temp/
+data/cache/
+data/generated/
+data/processed/
+
+# Common analytical output
+*.parquet.tmp
+*.csv.tmp
+*.json.tmp
+*.ndjson.tmp
+
+
+###############################################################################
+# 44. LARGE MEDIA / GENERATED MEDIA
+###############################################################################
+
+# Common generated video/audio/image intermediates
+*.wav.tmp
+*.mp3.tmp
+*.mp4.tmp
+*.mov.tmp
+*.avi.tmp
+*.webm.tmp
+*.png.tmp
+*.jpg.tmp
+*.jpeg.tmp
+
+# Thumbnail/cache directories
+thumbnails/
+thumbs/
+previews/
+previews-cache/
+
+
+###############################################################################
+# 45. FRONTEND / DESIGN TOOL LOCAL STATE
+###############################################################################
+
+# Story/design caches
+.figma/
+.figma-cache/
+.sketch/
+.sketch-cache/
+
+# Electron
+.electron/
+electron-builder.yml.local
+
+# Expo
+.expo/
+.expo-shared/
+
+# React Native
+.metro-health-check*
+.metro-cache/
+
+
+###############################################################################
+# 46. MOBILE / APP LOCAL STATE
+###############################################################################
+
+# Android Studio
+.externalNativeBuild/
+.cxx/
+captures/
+
+# React Native / Expo
+.expo/
+.expo-shared/
+
+# Flutter
+.flutter-plugins
+.flutter-plugins-dependencies
+.dart_tool/
+
+
+###############################################################################
+# 47. DOCUMENTATION SITE GENERATORS
+###############################################################################
+
+.jekyll-cache/
+.sass-cache/
+_site/
+.hugo_build.lock
+public/
+
+
+###############################################################################
+# 48. STATIC SITE / GENERATOR OUTPUT
+###############################################################################
+
+# Common generated public/site output
+/public/
+/_site/
+/dist/
+
+# If your repository intentionally stores public static assets, remove or
+# override these rules.
+
+
+###############################################################################
+# 49. LOCAL DEVELOPMENT DATABASE / SERVICE VOLUMES
+###############################################################################
+
+postgres-data/
+mysql-data/
+mariadb-data/
+redis-data/
+mongo-data/
+elasticsearch-data/
+minio-data/
+docker-data/
+docker-volumes/
+
+
+###############################################################################
+# 50. SECRET SCANNING / SECURITY TOOL LOCAL OUTPUT
+###############################################################################
+
+.gitleaks/
+.gitleaks-report*
+.secretlint/
+trufflehog/
+security-reports/
+security-report/
+security-results/
+
+
+###############################################################################
+# 51. LINTER / FORMATTER / ANALYZER CACHES
+###############################################################################
+
+.eslintcache
+.stylelintcache
+.prettier-cache
+.prettierignore.local
+.ruff_cache/
+.mypy_cache/
+.pyright/
+.php-cs-fixer.cache
+.phpstan/
+.sonar/
+.sonarqube/
+.gradle/
+.bazel/
+
+
+###############################################################################
+# 52. BUILD SYSTEM STATE
+###############################################################################
+
+.bazel/
+.bazelrc.local
+.bazel-out/
+bazel-bin/
+bazel-testlogs/
+bazel-genfiles/
+
+buck-out/
+buck-cache/
+
+.ninja_deps
+.ninja_log
+
+
+###############################################################################
+# 53. GENERATED GRAPHICS / DESIGN EXPORTS
+###############################################################################
+
+# Common temporary export directories
+exports/
+exports-temp/
+export/
+export-temp/
+
+# Raster/vector editor temporary files
+*.xcf~
+*.psd~
+*.ai~
+*.sketch~
+
+
+###############################################################################
+# 54. LOCAL PACKAGE / ARTIFACT REGISTRIES
+###############################################################################
+
+.nexus/
+.artifactory/
+.registry/
+.registry-cache/
+package-cache/
+packages-cache/
+
+
+###############################################################################
+# 55. PERFORMANCE / PROFILING OUTPUT
+###############################################################################
+
+profiles/
+profile/
+profiling/
+perf/
+perf.data*
+*.perf
+*.cpuprofile
+*.heapprofile
+*.heapsnapshot
+
+
+###############################################################################
+# 56. GENERATED SOURCE MAPS / DEBUG ARTIFACTS
+###############################################################################
+
+*.map
+*.d.ts.map
+
+# If source maps are intentionally distributed, remove these rules.
+
+
+###############################################################################
+# 57. COMMON GENERATED METADATA
+###############################################################################
+
+*.generated
+*.generated.*
+*.gen
+*.gen.*
+*.manifest.generated
+*.metadata.generated
+
+
+###############################################################################
+# 58. LOCAL CLI STATE
+###############################################################################
+
+.cli/
+.cli-cache/
+.cli-state/
+.command-cache/
+.command-state/
+.runtime/
+.runtime-local/
+
+
+###############################################################################
+# 59. LOCAL AGENT / AUTOMATION ARTIFACTS
+###############################################################################
+
+.agent/
+.agents/
+.agent-cache/
+.agent-state/
+.agent-work/
+.agent-tmp/
+
+.task/
+.tasks/
+.task-cache/
+.task-state/
+
+.automation/
+.automation-cache/
+.automation-state/
+
+.hooks-local/
+.workflows-local/
+
+
+###############################################################################
+# 60. LOCAL MCP / TOOLING STATE
+###############################################################################
+
+.mcp/
+.mcp-local/
+.mcp-cache/
+.mcp-state/
+.mcp-work/
+.mcp-tmp/
+
+# Local connector credentials/configuration
+.mcp.json.local
+mcp.local.json
+mcp.config.local.json
+
+
+###############################################################################
+# 61. GENERATED API CLIENT / SDK ARTIFACTS
+###############################################################################
+
+.sdk-generated/
+api-client-generated/
+client-generated/
+server-generated/
+openapi-generated/
+swagger-generated/
+
+
+###############################################################################
+# 62. LOCAL PACKAGE MANAGER / TOOL DOWNLOADS
+###############################################################################
+
+.downloads/
+.download/
+.cache/downloads/
+tools-cache/
+tool-cache/
+toolchains/
+toolchain-cache/
+
+
+###############################################################################
+# 63. LOCAL LOGGING / TELEMETRY
+###############################################################################
+
+.telemetry/
+.telemetry-cache/
+.telemetry-state/
+.telemetry-local/
+
+analytics/
+analytics-local/
+
+
+###############################################################################
+# 64. LOCAL IPC / SOCKET / RUNTIME FILES
+###############################################################################
+
+*.sock
+*.socket
+*.pid
+run/
+runtime/
+runtime-data/
+
+
+###############################################################################
+# 65. LOCAL DEVELOPMENT CERTIFICATE / CA STATE
+###############################################################################
+
+.ca/
+.ca-cache/
+.local-ca/
+.local-certs/
+
+
+###############################################################################
+# 66. GENERATED CONFIGURATION
+###############################################################################
+
+config.generated.*
+settings.generated.*
+environment.generated.*
+runtime.generated.*
+build.generated.*
+version.generated.*
+
+
+###############################################################################
+# 67. TEMPORARY JSON / YAML / TOML STATE
+###############################################################################
+
+*.tmp.json
+*.tmp.yaml
+*.tmp.yml
+*.tmp.toml
+*.local.json
+*.local.yaml
+*.local.yml
+*.local.toml
+
+# Protect explicit examples
+!*.example.json
+!*.example.yaml
+!*.example.yml
+!*.example.toml
+
+
+###############################################################################
+# 68. LOCAL SCRIPT STATE
+###############################################################################
+
+*.local.sh
+*.local.bash
+*.local.zsh
+*.local.ps1
+
+
+###############################################################################
+# 69. GENERATED CHANGE / PATCH FILES
+###############################################################################
+
+*.diff
+*.rej
+*.patch.tmp
+
+
+###############################################################################
+# 70. COMMON CI TEST ARTIFACTS
+###############################################################################
+
+coverage-final.json
+lcov.info
+junit.xml
+test-results.xml
+test-results.json
+results.xml
+results.json
+reports/
+test-output/
+test-output-*/
+
+
+###############################################################################
+# 71. LOCAL BROWSER AUTOMATION
+###############################################################################
+
+.playwright/
+.puppeteer/
+.chromium/
+.firefox/
+.webkit/
+.browser-cache/
+browser-cache/
+
+
+###############################################################################
+# 72. LOCAL CACHE DATABASES
+###############################################################################
+
+.cache.db
+.cache.sqlite
+.cache.sqlite3
+cache.db
+cache.sqlite
+cache.sqlite3
+
+
+###############################################################################
+# 73. GENERATED ARCHIVE / RELEASE DIRECTORIES
+###############################################################################
+
+release/
+releases/
+artifacts/
+packages/
+dist/
+build/
+
+
+###############################################################################
+# 74. LOCAL DEVELOPMENT NOTES
+###############################################################################
+
+# Personal scratch notes, never assume these are project documentation
+.notes-local/
+.notes-private/
+scratch-notes/
+TODO.local
+NOTES.local
+
+
+###############################################################################
+# 75. PERSONAL MACHINE CONFIGURATION
+###############################################################################
+
+machine.local
+machine.local.*
+host.local
+host.local.*
+developer.local
+developer.local.*
+personal.local
+personal.local.*
+
+
+###############################################################################
+# 76. COMMON SECRET FILE NAMES
+###############################################################################
+
+secret
+secrets
+secret.json
+secrets.json
+secret.yaml
+secrets.yaml
+secret.yml
+secrets.yml
+credentials
+credentials.json
+credentials.yaml
+credentials.yml
+passwords.json
+tokens.json
+
+
+###############################################################################
+# 77. PRIVATE SSH / SIGNING / AUTH DIRECTORIES
+###############################################################################
+
+.ssh/
+.gnupg/
+.gpg/
+.age/
+
+
+###############################################################################
+# 78. LOCAL CLOUD SDK STATE
+###############################################################################
+
+.azure/
+.aws/
+.gcloud/
+.gcpsa/
+.oci/
+.kube/
+helm/cache/
+helm/repository/cache/
+helm/repository/repositories.yaml
+
+
+###############################################################################
+# 79. LOCAL CONTAINER ORCHESTRATION STATE
+###############################################################################
+
+.minikube/
+.k3d/
+.kind/
+.k3s/
+.microk8s/
+
+
+###############################################################################
+# 80. LOCAL SERVER STATE
+###############################################################################
+
+.pids/
+.pid/
+.server/
+.server-local/
+.server-state/
+service-data/
+service-state/
+
+
+###############################################################################
+# 81. GENERATED LOCKS / TEMPORARY LOCKS
+###############################################################################
+
+*.lck
+*.lockfile
+*.pid
+*.pid.lock
+
+
+###############################################################################
+# 82. COMMON REPL / CONSOLE STATE
+###############################################################################
+
+.python_history
+.node_repl_history
+.irb_history
+.psql_history
+.mysql_history
+.sqlite_history
+.bpython_history
+
+
+###############################################################################
+# 83. LOCAL PACKAGE INDEXES
+###############################################################################
+
+.pypi/
+.npm-registry/
+.yarn-registry/
+.cargo/registry/
+.cargo/git/
+.rustup/
+
+
+###############################################################################
+# 84. LOCAL LANGUAGE TOOLCHAIN STATE
+###############################################################################
+
+.golang/
+.gvm/
+.rbenv/
+.pyenv/
+.nvm/
+.fnvm/
+.volta/
+.asdf/
+.mise/
+
+
+###############################################################################
+# 85. LOCAL COMPILER / TOOLCHAIN CACHE
+###############################################################################
+
+.ccache/
+.sccache/
+.clangd/
+.clang-cache/
+
+
+###############################################################################
+# 86. COMMON GENERATED REPORTS
+###############################################################################
+
+reports/
+report/
+reports-local/
+reports-generated/
+report.html
+report.json
+report.xml
+
+
+###############################################################################
+# 87. LOCAL SECURITY / SCANNING OUTPUT
+###############################################################################
+
+security/
+security-local/
+security-results/
+security-reports/
+scan-results/
+scan-reports/
+vulnerability-reports/
+
+
+###############################################################################
+# 88. GENERATED DOCUMENT CONVERSION OUTPUT
+###############################################################################
+
+converted/
+conversion-output/
+rendered/
+render/
+render-cache/
+
+
+###############################################################################
+# 89. LOCAL MEDIA PROCESSING
+###############################################################################
+
+.media-cache/
+.media-tmp/
+.media-work/
+render-cache/
+transcode-cache/
+transcoded/
+
+
+###############################################################################
+# 90. LOCAL WEB SERVER / DEV SERVER STATE
+###############################################################################
+
+.devserver/
+.dev-server/
+.server-cache/
+.hmr/
+.hmr-cache/
+
+
+###############################################################################
+# 91. GENERATED FRONTEND ASSETS
+###############################################################################
+
+assets-generated/
+static-generated/
+public-generated/
+webpack-stats.json
+stats.json
+
+
+###############################################################################
+# 92. LOCAL DEVELOPMENT OVERRIDES
+###############################################################################
+
+docker-compose.override.yaml
+docker-compose.local.yaml
+compose.override.yaml
+compose.local.yaml
+
+
+###############################################################################
+# 93. LOCAL SERVICE CONFIGURATION
+###############################################################################
+
+redis.conf.local
+nginx.conf.local
+apache.conf.local
+postgresql.conf.local
+mysql.conf.local
+
+
+###############################################################################
+# 94. LOCAL BACKEND / SERVERLESS STATE
+###############################################################################
+
+.vercel/
+.netlify/
+.wrangler/
+.serverless/
+.sst/
+.aws-sam/
+.firebase/
+.amplify/
+
+
+###############################################################################
+# 95. GENERIC GENERATED FILE MARKERS
+###############################################################################
+
+*.generated.ts
+*.generated.js
+*.generated.tsx
+*.generated.jsx
+*.generated.py
+*.generated.go
+*.generated.rs
+*.generated.java
+*.generated.cs
+
+
+###############################################################################
+# 96. LOCAL VERSION / RELEASE STATE
+###############################################################################
+
+.version.local
+.version.local.*
+release.local
+release.local.*
+version.local
+version.local.*
+
+
+###############################################################################
+# 97. LOCAL TASK / BUILD STATE
+###############################################################################
+
+.build/
+.build-local/
+build-local/
+build-cache/
+build-cache-*/
+compile-cache/
+compile-cache-*/
+
+
+###############################################################################
+# 98. LOCAL ARTIFACT STATE
+###############################################################################
+
+.artifact/
+.artifacts/
+.artifact-cache/
+.artifacts-cache/
+artifact-cache/
+artifacts-cache/
+
+
+###############################################################################
+# 99. UNIVERSAL TEMPORARY FILE EXTENSIONS
+###############################################################################
+
+*.temp
+*.temporary
+*.tmp
+*.temp.*
+*.tmp.*
+*.cache
+*.cache.*
+*.swp
+*.swo
+
+
+###############################################################################
+# 100. FINAL SAFETY NET
+###############################################################################
+
+# Common OS/application trash
+*.crdownload
+*.download
+*.part
+*.partial
+*.orig
+*.rej
+
+# Crash dumps
+*.dmp
+*.core
+core
+core.*
+
+# Generic generated state
+*.state
+*.state.*
+*.session
+*.session.*
