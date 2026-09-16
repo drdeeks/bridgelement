@@ -1,6 +1,5 @@
 # MCP Bridgelement
 
-[![npm version](https://img.shields.io/npm/v/@the-federation/mcp-bridgelement.svg?style=flat-square)](https://www.npmjs.com/package/@the-federation/mcp-bridgelement)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D18.0.0-brightgreen.svg?style=flat-square)](https://nodejs.org/)
 [![Cloudflare Workers](https://img.shields.io/badge/Cloudflare-Workers-orange.svg?style=flat-square)](https://workers.cloudflare.com/)
@@ -8,9 +7,9 @@
 [![MCP](https://img.shields.io/badge/MCP-Compatible-purple.svg?style=flat-square)](https://modelcontextprotocol.io/)
 [![Provider Agnostic](https://img.shields.io/badge/Provider-Agnostic-success.svg?style=flat-square)](#)
 
-**MCP Bridgelement** is a standalone, provider-agnostic MCP (Model Context Protocol) bridge that delivers policy enforcement, identity resolution, persistent storage, and telemetry collection for any LLM provider, agent framework, or local daemon. It is a complete, independently deployable product with zero required dependencies on the Agent Character Kit or any other ecosystem.
+**MCP Bridgelement** is a standalone, provider-agnostic MCP (Model Context Protocol) bridge that delivers policy enforcement, identity resolution, persistent storage, and telemetry collection for any LLM provider, agent framework, or local daemon. It is a complete, independently deployable product.
 
-ChatGPT is one possible adapter; it is not the service identity. The bridge works with any MCP-compatible client.
+The bridge works with any MCP-compatible client.
 
 ## What This Is
 
@@ -226,20 +225,34 @@ Or via HTTP transport directly.
 Import individual modules for custom integrations:
 
 ```javascript
-import { evaluatePolicy } from '@the-federation/mcp-bridgelement/vendor/core';
-import { defaultProfile, validateProfile } from '@the-federation/mcp-bridgelement/vendor/config-schema';
-import { EVENT_TYPE, createEventSink } from '@the-federation/mcp-bridgelement/vendor/events';
+import { evaluatePolicy } from './vendor/core/src/index.js';
+import { defaultProfile, validateProfile } from './vendor/config-schema/src/profile.js';
+import { EVENT_TYPE, createEventSink } from './vendor/events/src/index.js';
 ```
 
 ### Identity Integration
 
 The bridge extracts identity from:
+- **OAuth 2.0 Bearer tokens** (via `/.well-known/oauth-authorization-server` discovery)
 - **Cloudflare Access**: `cf-access-authenticated-user-email` + `x-ack-workspace-id`
-- **OAuth/JWT**: Custom headers (`x-ack-user-id`, `x-ack-installation-id`, etc.)
 - **Test header**: `x-ack-test-identity` (when `ACK_ALLOW_TEST_IDENTITY=1`)
 - **Bootstrap token**: `Authorization: Bearer <token>` (admin only, NOT user identity)
 
 Model-supplied `user_id` / `workspace_id` in tool arguments are **always ignored**.
+
+## Authentication & Discovery
+
+The bridge implements OAuth 2.0 / OIDC discovery for MCP clients:
+
+- `GET /.well-known/oauth-authorization-server` — Authorization server metadata
+- `GET /.well-known/mcp` — MCP server metadata and capabilities
+- `GET /.well-known/jwks.json` — JSON Web Key Set
+- `POST /oauth/register` — Dynamic client registration
+- `GET /oauth/authorize` — Authorization endpoint
+- `POST /oauth/token` — Token endpoint (authorization_code, refresh_token, client_credentials)
+- `POST /oauth/introspect` — Token introspection
+
+Supported scopes: `mcp:read`, `mcp:write`, `mcp:tools`
 
 ## Telemetry
 

@@ -2,7 +2,7 @@
 
 ## Role & Purpose
 
-**MCP Bridgelement** (`@the-federation/mcp-bridgelement@0.1.0`) is a **standalone, provider-agnostic MCP bridge** — a complete, independently deployable product. It is NOT a component of the Agent Character Kit. It has zero required dependencies on ACK or any other ecosystem.
+**MCP Bridgelement** (`@the-federation/mcp-bridgelement@0.1.0`) is a **standalone, provider-agnostic MCP bridge** — a complete, independently deployable product. It has zero required dependencies on any external ecosystem.
 
 It provides:
 1. **Identity Resolution** — Maps provider-specific auth (OAuth, JWT, CF Access, custom headers) to universal tenant/user/installation IDs
@@ -18,14 +18,13 @@ It provides:
 | **Fail-closed on storage failure** | `enforcement.js` returns `decision: unavailable` on any storage error |
 | **Zero npm deps for core** | All enforcement/schema/protocol/events/core code is **vendored** under `vendor/` |
 | **Hierarchical event IDs** | Every event: `sessionId → episodeId → taskId → runId` + counterfactual `proposedAction` |
-| **Provider-agnostic** | No ChatGPT/Claude-specific logic; `ACK_PROVIDER` defaults to `agnostic` |
+| **Provider-agnostic** | No provider-specific logic; `ACK_PROVIDER` defaults to `agnostic` |
 
 ## Repository State (v0.1.0)
 
 - **Package**: `@the-federation/mcp-bridgelement@0.1.0`
 - **Worker endpoint**: `bridgelement.drdeeks.xyz` (via `ack-universal.drdeeks.workers.dev`)
 - **D1 database**: `ack-universal`
-- **Character Kit reference**: `agent-character-kit@1.9.1` (vendored snapshot, not a dependency)
 - **All 14 tests pass**: `npm test` → green
 
 ## Gotchas & Overlooked Details
@@ -43,7 +42,7 @@ src/rl-events.js      →  ../vendor/events/src/index.js
 src/enforcement.js    →  ../vendor/core/src/index.js, ../vendor/protocol/src/index.js, ../vendor/config-schema/src/profile.js
 src/storage/*.js      →  ../../vendor/config-schema/src/profile.js
 ```
-**Never** use `@drdeeks/character-kit-*` specifiers — they don't exist in this package.
+**Never** use external package specifiers — they don't exist in this package.
 
 ### 4. D1 Migrations Must Match Storage Code
 - `0001_init.sql` — core tables (workspaces, users, profiles, decisions, holds, acks, agents, bindings, watchdog, audit)
@@ -82,7 +81,7 @@ Telemetry registry tables are keyed by `workspace_id`. No cross-workspace visibi
 | `src/storage/d1.js` | Production D1 adapter, all SQL, tenant enforcement |
 | `src/storage/memory.js` | Test/local adapter, same interface as D1 |
 | `src/ids.js` | `newId(prefix)`, `nowIso()` |
-| `vendor/*/src/*.js` | **Vendored** — do not edit; update by re-vendoring from ACK 1.9.1 |
+| `vendor/*/src/*.js` | **Vendored** — do not edit; update by re-vendoring from source |
 
 ## Test Coverage (Hosted Tests)
 
@@ -115,21 +114,12 @@ Telemetry registry tables are keyed by `workspace_id`. No cross-workspace visibi
 - [ ] `POST https://<host>/mcp` without auth → 401
 - [ ] `POST https://<host>/mcp` with test header → works
 
-## Re-vendoring Process (When ACK Updates)
-
-1. Update `agent-character-kit` to target version
-2. Run vendoring script (copies `packages/*/src` → `vendor/*/src`)
-3. Purge `package.json` from all `vendor/*/` subdirs
-4. Verify imports in `src/` resolve to `../vendor/...`
-5. Run `npm test` — must pass
-6. Bump `mcp-bridgelement` patch version
-
 ## Version Lock
 
 | Component | Version | Source |
 |-----------|---------|--------|
 | `@the-federation/mcp-bridgelement` | 0.1.0 | This package |
-| Vendored Character Kit | 1.9.1 | `agent-character-kit@1.9.1` snapshot |
+| Vendored core | snapshot | Internal vendored copy |
 | `ACK_VERSION` constant | 1.9.1 | Returned by `/health`, used in telemetry |
 
 **Never** publish a bridge version that doesn't match its vendored snapshot.

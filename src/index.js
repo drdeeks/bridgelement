@@ -2,8 +2,18 @@ import { HOSTED_TOOLS } from "../vendor/mcp-contract/src/hosted-tools.js";
 import { MemoryStore } from "./storage/memory.js";
 import { D1Store } from "./storage/d1.js";
 import { handleMcpJsonRpc } from "./mcp.js";
-import { resolveIdentity, AuthError } from "./auth.js";
+import { resolveIdentity, AuthError, ignoreModelIdentity } from "./auth.js";
 import { buildRlEvent } from "./rl-events.js";
+import {
+  oauthMetadataHandler,
+  mcpMetadataHandler,
+  jwksHandler,
+  registerHandler,
+  authorizeHandler,
+  tokenHandler,
+  introspectHandler,
+  resolveIdentityFromToken,
+} from "./oauth.js";
 
 const ACK_VERSION = "1.9.1";
 
@@ -52,6 +62,31 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
+    // Well-known OAuth / MCP metadata endpoints (public, no auth)
+    if (url.pathname === "/.well-known/oauth-authorization-server") {
+      return oauthMetadataHandler(request, env);
+    }
+    if (url.pathname === "/.well-known/mcp") {
+      return mcpMetadataHandler(request, env);
+    }
+    if (url.pathname === "/.well-known/jwks.json") {
+      return jwksHandler(request, env);
+    }
+
+    // OAuth endpoints
+    if (url.pathname === "/oauth/register" && request.method === "POST") {
+      return registerHandler(request, env);
+    }
+    if (url.pathname === "/oauth/authorize" && request.method === "GET") {
+      return authorizeHandler(request, env);
+    }
+    if (url.pathname === "/oauth/token" && request.method === "POST") {
+      return tokenHandler(request, env);
+    }
+    if (url.pathname === "/oauth/introspect" && request.method === "POST") {
+      return introspectHandler(request, env);
+    }
+
     if (url.pathname === "/health") {
       return new Response(JSON.stringify({ ok: true, version: ACK_VERSION }), {
         headers: { "content-type": "application/json" },
@@ -68,7 +103,15 @@ export default {
         );
       }
       if (request.method === "POST") {
-        const identity = resolveIdentity(request, env);
+        // Try Bearer token first (OAuth), then fall back to existing identity resolution
+        const authHeader = request.headers.get("authorization");
+        const bearer = authHeader?.match(/^Bearer\s+(.+)$/i)?.[1]?.trim();
+        let identity = bearer ? resolveIdentityFromToken(bearer, env) : null;
+        
+        if (!identity) {
+          identity = resolveIdentity(request, env);
+        }
+        
         if (!identity) {
           return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401, headers: { "content-type": "application/json" } });
         }
@@ -77,7 +120,14 @@ export default {
     }
 
     if (url.pathname === "/events" && request.method === "POST") {
-      const identity = resolveIdentity(request, env);
+      const authHeader = request.headers.get("authorization");
+      const bearer = authHeader?.match(/^Bearer\s+(.+)$/i)?.[1]?.trim();
+      let identity = bearer ? resolveIdentityFromToken(bearer, env) : null;
+      
+      if (!identity) {
+        identity = resolveIdentity(request, env);
+      }
+      
       if (!identity) {
         return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401, headers: { "content-type": "application/json" } });
       }
