@@ -2,7 +2,7 @@
 
 ## Role & Purpose
 
-**Bridgelement** (`bridgelement@0.1.0`) is a **standalone, provider-agnostic MCP bridge** — a complete, independently deployable product. It has zero required dependencies on any external ecosystem.
+**Bridgelement** (`@the-federation/bridgelement`) is a **standalone, provider-agnostic MCP bridge** — a complete, independently deployable product. It has zero required dependencies on any external ecosystem.
 
 It provides:
 1. **Identity Resolution** — Maps provider-specific auth (OAuth, JWT, CF Access, custom headers) to universal tenant/user/installation IDs
@@ -22,7 +22,7 @@ It provides:
 
 ## Repository State (v0.1.0)
 
-- **Package**: `bridgelement@0.1.0`
+- **Package**: `@the-federation/bridgelement`
 - **Worker endpoint**: `bridgelement.drdeeks.xyz` (via `ack-universal.drdeeks.workers.dev`)
 - **D1 database**: `ack-universal`
 - **All 14 tests pass**: `npm test` → green
@@ -118,7 +118,7 @@ Telemetry registry tables are keyed by `workspace_id`. No cross-workspace visibi
 
 | Component | Version | Source |
 |-----------|---------|--------|
-| `bridgelement` | 0.1.0 | This package |
+| `@the-federation/bridgelement` | 0.1.0 | This package |
 | Vendored core | snapshot | Internal vendored copy |
 | `ACK_VERSION` constant | 1.9.1 | Returned by `/health`, used in telemetry |
 

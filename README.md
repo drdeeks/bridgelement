@@ -304,4 +304,4 @@ Query via `ack_list_events` MCP tool or `POST /events` for batch ingestion.
 
 ## License
 
-MIT © bridgelement
+MIT © @the-federation/bridgelement
