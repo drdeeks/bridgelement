@@ -30,7 +30,7 @@ export function mcpMetadataHandler(request, env) {
   const base = `${url.protocol}//${url.host}`;
   
   return new Response(JSON.stringify({
-    name: "MCP Bridgelement",
+    name: "Bridgelement",
     version: "1.0.0",
     description: "Provider-agnostic MCP bridge with policy enforcement and telemetry",
     mcp_version: "2024-11-05",

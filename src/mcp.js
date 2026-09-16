@@ -34,7 +34,7 @@ export async function handleMcpJsonRpc(body, ctx) {
       result: {
         protocolVersion: MCP_PROTOCOL_VERSION,
         capabilities: { tools: { listChanged: false } },
-        serverInfo: { name: "mcp-bridgelement", version: ctx.version || "1.9.1" },
+        serverInfo: { name: "bridgelement", version: ctx.version || "1.9.1" },
       },
     };
   }
@@ -57,7 +57,7 @@ export async function handleMcpJsonRpc(body, ctx) {
 export async function handleFetch(request, env, store) {
   const url = new URL(request.url);
   if (request.method === "GET" && url.pathname === "/health") {
-    return json({ ok: true, service: "mcp-bridgelement" });
+    return json({ ok: true, service: "bridgelement" });
   }
   let identity;
   try {

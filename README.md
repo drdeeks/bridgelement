@@ -1,4 +1,4 @@
-# MCP Bridgelement
+# Bridgelement
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D18.0.0-brightgreen.svg?style=flat-square)](https://nodejs.org/)
@@ -7,7 +7,7 @@
 [![MCP](https://img.shields.io/badge/MCP-Compatible-purple.svg?style=flat-square)](https://modelcontextprotocol.io/)
 [![Provider Agnostic](https://img.shields.io/badge/Provider-Agnostic-success.svg?style=flat-square)](#)
 
-**MCP Bridgelement** is a standalone, provider-agnostic MCP (Model Context Protocol) bridge that delivers policy enforcement, identity resolution, persistent storage, and telemetry collection for any LLM provider, agent framework, or local daemon. It is a complete, independently deployable product.
+**Bridgelement** is a standalone, provider-agnostic MCP (Model Context Protocol) bridge that delivers policy enforcement, identity resolution, persistent storage, and telemetry collection for any LLM provider, agent framework, or local daemon. It is a complete, independently deployable product.
 
 The bridge works with any MCP-compatible client.
 
@@ -35,7 +35,7 @@ The bridge works with any MCP-compatible client.
 
 ```bash
 # From the plugin directory
-cd plugins/mcp-bridgelement
+cd plugins/bridgelement
 npm install
 npm test
 ```
@@ -156,7 +156,7 @@ Policy engine:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                        MCP Bridgelement                          │
+│                        Bridgelement                          │
 │  ┌──────────────┐  ┌──────────────────┐  ┌──────────────────┐   │
 │  │   Identity   │  │   Enforcement    │  │     Storage      │   │
 │  │  Resolution  │──▶│  (evaluatePolicy)│◀──│  (D1 / Memory)   │   │
@@ -206,7 +206,7 @@ Counterfactual `proposedAction` is always recorded alongside the actual decision
 ## Project Structure
 
 ```
-plugins/mcp-bridgelement/
+plugins/bridgelement/
 ├── src/
 │   ├── index.js              # Worker entry point (fetch handler)
 │   ├── mcp.js                # MCP protocol handler (JSON-RPC)
@@ -304,4 +304,4 @@ Query via `ack_list_events` MCP tool or `POST /events` for batch ingestion.
 
 ## License
 
-MIT © mcp-bridgelement
+MIT © bridgelement
