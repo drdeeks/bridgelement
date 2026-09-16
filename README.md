@@ -11,23 +11,23 @@
 
 The bridge works with any MCP-compatible client.
 
-## What This Is
+## Endpoints
 
-- **Cloudflare Worker** `fetch` handler at `POST /mcp` (and `GET /mcp` for tools discovery)
-- **D1 schema** in `migrations/` (MemoryStore for local testing)
-- **Identity** derived from the authenticated connection, never from `user_id` arguments supplied by the model
-- **Enforcement** via vendored `evaluatePolicy` engine — same logic as local daemons
-- **Fail-closed** storage/worker failures return `decision: unavailable`, never `allow`
-- **No** `@modelcontextprotocol/sdk`, **no** Apps SDK widget, **no** nested MCP server
+**Production:** `https://bridgelement.drdeeks.xyz/mcp`
 
-## Why It Exists
-
-LLM providers and agent frameworks need a neutral, auditable enforcement layer that:
-1. **Resolves identity** from the actual authenticated connection (OAuth, JWT, Access, etc.)
-2. **Evaluates policy** against versioned profiles stored in durable storage
-3. **Emits canonical telemetry** for RL, evaluation, analytics, replay, and dataset generation
-4. **Runs anywhere** — Cloudflare Workers, Node.js, Deno, Bun — with the same logic
-5. **Depends on nothing** — zero external npm dependencies for core enforcement
+| Endpoint | Method | Auth | Purpose |
+|----------|--------|------|---------|
+| `/mcp` | GET | Public | Tools discovery (MCP `tools/list`) |
+| `/mcp` | POST | Required | MCP JSON-RPC (`tools/call`, `initialize`, etc.) |
+| `/health` | GET | Public | Health check + version |
+| `/.well-known/oauth-authorization-server` | GET | Public | OAuth 2.0 Authorization Server Metadata (RFC 8414) |
+| `/.well-known/mcp` | GET | Public | MCP Server Metadata |
+| `/.well-known/jwks.json` | GET | Public | JSON Web Key Set |
+| `/oauth/register` | POST | Public | Dynamic Client Registration (RFC 7591) |
+| `/oauth/authorize` | GET | User | Authorization Endpoint (PKCE) |
+| `/oauth/token` | POST | Client | Token Endpoint |
+| `/oauth/introspect` | POST | Client | Token Introspection (RFC 7662) |
+| `/events` | POST | Required | Batch telemetry ingestion |
 
 ## Quick Start
 
@@ -56,7 +56,40 @@ npm test
    ```bash
    npx wrangler deploy
    ```
-6. **Point any MCP client** at `https://<your-worker>.<subdomain>.workers.dev/mcp`
+6. **Point any MCP client** at `https://bridgelement.drdeeks.xyz/mcp`
+
+### MCP Client Configuration
+
+```json
+{
+  "mcpServers": {
+    "bridgelement": {
+      "command": "npx",
+      "args": ["mcp-remote", "https://bridgelement.drdeeks.xyz/mcp"]
+    }
+  }
+}
+```
+
+Or via HTTP transport directly.
+
+## What This Is
+
+- **Cloudflare Worker** `fetch` handler at `POST /mcp` (and `GET /mcp` for tools discovery)
+- **D1 schema** in `migrations/` (MemoryStore for local testing)
+- **Identity** derived from the authenticated connection, never from `user_id` arguments supplied by the model
+- **Enforcement** via vendored `evaluatePolicy` engine — same logic as local daemons
+- **Fail-closed** storage/worker failures return `decision: unavailable`, never `allow`
+- **No** `@modelcontextprotocol/sdk`, **no** Apps SDK widget, **no** nested MCP server
+
+## Why It Exists
+
+LLM providers and agent frameworks need a neutral, auditable enforcement layer that:
+1. **Resolves identity** from the actual authenticated connection (OAuth, JWT, Access, etc.)
+2. **Evaluates policy** against versioned profiles stored in durable storage
+3. **Emits canonical telemetry** for RL, evaluation, analytics, replay, and dataset generation
+4. **Runs anywhere** — Cloudflare Workers, Node.js, Deno, Bun — with the same logic
+5. **Depends on nothing** — zero external npm dependencies for core enforcement
 
 ## Contracts, Schemas & Protocols
 
@@ -178,6 +211,7 @@ plugins/mcp-bridgelement/
 │   ├── index.js              # Worker entry point (fetch handler)
 │   ├── mcp.js                # MCP protocol handler (JSON-RPC)
 │   ├── auth.js               # Identity extraction from request
+│   ├── oauth.js              # OAuth 2.0 / OIDC endpoints
 │   ├── enforcement.js        # Policy evaluation (vendored engine)
 │   ├── ids.js                # ID generation utilities
 │   ├── rl-events.js          # Telemetry event building & emission
@@ -187,8 +221,11 @@ plugins/mcp-bridgelement/
 │       └── memory.js         # In-memory storage (tests/local)
 ├── migrations/
 │   ├── 0001_init.sql         # Core schema (workspaces, users, profiles, decisions)
+│   ├── 0001_init_down.sql    # Rollback for 0001
 │   ├── 0002_rl_events.sql    # RL events table (enforcement_events)
-│   └── 0003_universal_telemetry.sql  # Telemetry registry (components, attributes, schemas, interventions)
+│   ├── 0002_rl_events_down.sql  # Rollback for 0002
+│   ├── 0003_universal_telemetry.sql  # Telemetry registry
+│   └── 0003_universal_telemetry_down.sql  # Rollback for 0003
 ├── vendor/
 │   ├── mcp-contract/         # MCP tool definitions & schemas
 │   ├── config-schema/        # Profile validation & policy compilation
@@ -212,7 +249,7 @@ Any MCP-compatible client can connect:
   "mcpServers": {
     "bridgelement": {
       "command": "npx",
-      "args": ["mcp-remote", "https://your-bridgelement.workers.dev/mcp"]
+      "args": ["mcp-remote", "https://bridgelement.drdeeks.xyz/mcp"]
     }
   }
 }
@@ -267,4 +304,4 @@ Query via `ack_list_events` MCP tool or `POST /events` for batch ingestion.
 
 ## License
 
-MIT © The Federation Society
+MIT © mcp-bridgelement
