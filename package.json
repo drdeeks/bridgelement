@@ -1,7 +1,7 @@
 {
-  "name": "@the-federation/mcp-bridgelement",
+  "name": "mcp-bridgelement",
   "version": "0.1.0",
-  "description": "Global MCP Bridge for standalone applications and agent systems. Provider-neutral policy enforcement, identity, storage, and collection of telemetry data for RL, evaluation, analytics, replay, and downstream dataset generation. ChatGPT is one optional adapter, not the service identity.",
+  "description": "Standalone MCP Bridge for policy enforcement, identity resolution, storage, and telemetry collection. Provider-agnostic, zero external dependencies for core enforcement.",
   "type": "module",
   "main": "src/index.js",
   "exports": {
