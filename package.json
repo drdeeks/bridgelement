@@ -1,6 +1,6 @@
 {
   "name": "@the-federation/bridgelement",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Standalone MCP Bridge for policy enforcement, identity resolution, storage, and telemetry collection. Provider-agnostic, zero external dependencies for core enforcement.",
   "type": "module",
   "main": "src/index.js",
